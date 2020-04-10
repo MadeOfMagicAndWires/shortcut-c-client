@@ -7,8 +7,11 @@ Author: mt-empty
 */
 
 /* Feature test macro for realpath */
-#define _BSD_SOURCE
-#define _DEFAULT_SOURCE
+#include <features.h>
+#if defined _DEFAULT_SOURCE || \
+defined _BSD_SOURCE || defined _XOPEN_SOURCE && _XOPEN_SOURCE >= 500
+    #define ___PATH_VALIDATION_ENABLED 1
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -21,9 +24,12 @@ Author: mt-empty
 #include <errno.h>
 #include <stdio.h>
 
+
 int handleArgs(int argc, char *argv[]);
 int getShortcutPage(char *filename);
+#ifdef ___PATH_VALIDATION_ENABLED
 int isValidShortcutPath(const char *path);
+#endif
 int getFileContent(char const *path, char **out);
 int parseShortcutPage(char const *input);
 int printFile(char const path[]);
@@ -185,10 +191,12 @@ int printFile(char const path[])
 {
     char *output;
 
+    #ifdef ___PATH_VALIDATION_ENABLED
     // check if the path resides in PAGES_BASE_DIR
     if(!isValidShortcutPath(path)) {
         return 1;
     }
+    #endif
 
     if (!getFileContent(path, &output))
     {
@@ -206,6 +214,7 @@ int printFile(char const path[])
  * Returns 1 if it is; 0 if it is not
  *
  */
+#ifdef ___PATH_VALIDATION_ENABLED
 int isValidShortcutPath(const char* path) {
 
     char* abspath = realpath(path, NULL);
@@ -220,6 +229,7 @@ int isValidShortcutPath(const char* path) {
     return 0;
 
 }
+#endif
 
 int parseShortcutPage(char const *input)
 {
